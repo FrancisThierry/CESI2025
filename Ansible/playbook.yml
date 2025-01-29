@@ -1,0 +1,5 @@
+- name: Ping alpine containers
+  hosts: alpine
+  tasks:
+    - name: Ping container
+      ping:
