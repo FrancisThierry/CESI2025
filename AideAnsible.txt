@@ -1,0 +1,41 @@
+thierry@DESKTOP-NLDCTVE:/mnt/c/Users/thier$ cat playbook.yml
+- name: Ping alpine containers
+  hosts: alpine
+  tasks:
+    - name: Ping container
+      ping:
+thierry@DESKTOP-NLDCTVE:/mnt/c/Users/thier$ cat inventory
+[alpine]
+alpine1 ansible_host=127.0.0.1 ansible_port=2222 ansible_user=root ansible_password=root
+alpine2 ansible_host=127.0.0.1 ansible_port=2223 ansible_user=root ansible_password=root
+thierry@DESKTOP-NLDCTVE:/mnt/c/Users/thier$ cat dockerfile
+FROM alpine:latest
+
+RUN apk update && \
+    apk add --no-cache openssh python3 py3-pip && \
+    echo 'root:root' | chpasswd && \
+    mkdir /root/.ssh && \
+    ssh-keygen -A && \
+    sed -i s/#PermitRootLogin.*/PermitRootLogin\ yes/ /etc/ssh/sshd_config && \
+    echo "PermitEmptyPasswords yes" >> /etc/ssh/sshd_config
+
+CMD ["/usr/sbin/sshd", "-D"]
+thierry@DESKTOP-NLDCTVE:/mnt/c/Users/thier$ cat docker-compose.yml
+version: '3'
+services:
+  alpine1:
+    build: .
+    container_name: alpine1
+    ports:
+      - "2222:22"
+  alpine2:
+    build: .
+    container_name: alpine2
+    ports:
+      - "2223:22"
+thierry@DESKTOP-NLDCTVE:/mnt/c/Users/thier$ history | grep ssh
+  136  dockr rm alpine-ssh
+  137  docker rm alpine-ssh
+  187  ssh-keyscan -p 2222 127.0.0.1 >> ~/.ssh/known_hosts
+  188  ssh-keyscan -p 2223 127.0.0.1 >> ~/.ssh/known_hosts
+  208  ssh-keygen -f "/home/thierry/.ssh/known_hosts" -R "[127.0.0.1]:2222"
